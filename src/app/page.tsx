@@ -7,7 +7,7 @@ import { ViewTracker } from "@/components/ViewTracker";
 import { LocalTime } from "@/components/LocalTime";
 import { ScrollProgress } from "@/components/ScrollProgress";
 
-export const instant = false;
+export const dynamic = "force-dynamic";
 
 const YEAR = new Date().getFullYear();
 

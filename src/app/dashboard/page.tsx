@@ -5,7 +5,7 @@ import { getAnalytics } from "@/lib/analytics";
 import { Editor } from "@/components/Editor";
 
 // Auth + DB backed — render at request time.
-export const instant = false;
+export const dynamic = "force-dynamic";
 
 export default async function Dashboard() {
   if (!(await isAuthed())) redirect("/login");

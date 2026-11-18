@@ -4,7 +4,7 @@ import { isAuthed } from "@/lib/auth";
 import { themeVars } from "@/lib/themes";
 import { LoginForm } from "@/components/LoginForm";
 
-export const instant = false;
+export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
   if (await isAuthed()) redirect("/dashboard");
