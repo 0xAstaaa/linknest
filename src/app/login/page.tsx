@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAuthed } from "@/lib/auth";
+import { isAuthed, isConfigured } from "@/lib/auth";
 import { themeVars } from "@/lib/themes";
 import { LoginForm } from "@/components/LoginForm";
 
@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
   if (await isAuthed()) redirect("/dashboard");
+  const configured = isConfigured();
 
   return (
     <main
@@ -28,7 +29,15 @@ export default async function LoginPage() {
         </div>
 
         <div className="rise mt-8" style={{ animationDelay: "120ms" }}>
-          <LoginForm />
+          {configured ? (
+            <LoginForm />
+          ) : (
+            <p className="border border-[var(--line)] p-4 font-mono text-[11px] uppercase leading-relaxed tracking-[0.15em] text-[var(--muted)]">
+              Login is disabled. Set the{" "}
+              <span className="text-[var(--fg)]">DASHBOARD_PASSWORD</span> environment
+              variable, then redeploy.
+            </p>
+          )}
         </div>
 
         <Link

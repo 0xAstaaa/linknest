@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getProfile } from "@/lib/profile";
-import { checkPassword, createSession, destroySession, isAuthed } from "@/lib/auth";
+import { checkPassword, createSession, destroySession, isAuthed, isConfigured } from "@/lib/auth";
+import { rateLimit, clientIp } from "@/lib/ratelimit";
 
 function normalizeUrl(raw: string) {
   const t = raw.trim();
@@ -23,10 +24,19 @@ async function requireAuth() {
 export type LoginResult = { ok: true } | { ok: false; error: string };
 
 export async function login(_prev: unknown, formData: FormData): Promise<LoginResult> {
+  if (!isConfigured()) {
+    return { ok: false, error: "Login is disabled: no dashboard password is configured." };
+  }
+
+  const ip = await clientIp();
+  // Max 8 attempts per 10 minutes per IP (counts every attempt, not just fails).
+  if (!rateLimit("login", ip, 8, 10 * 60_000)) {
+    return { ok: false, error: "Too many attempts. Try again in a few minutes." };
+  }
+
   const password = String(formData.get("password") ?? "");
   if (!checkPassword(password)) {
-    // tiny delay to blunt brute-forcing
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 400)); // slow down each attempt
     return { ok: false, error: "Incorrect password." };
   }
   await createSession();
@@ -105,6 +115,9 @@ export async function reorderLinks(orderedIds: string[]) {
 
 export async function trackClick(linkId: string) {
   try {
+    const ip = await clientIp();
+    // Cap click writes per IP (allows clicking several links, blocks floods).
+    if (!rateLimit("click", ip, 40, 60_000)) return;
     await prisma.$transaction([
       prisma.link.update({ where: { id: linkId }, data: { clicks: { increment: 1 } } }),
       prisma.event.create({ data: { type: "click", linkId } }),
@@ -116,6 +129,11 @@ export async function trackClick(linkId: string) {
 
 export async function trackView(profileId: string) {
   try {
+    const ip = await clientIp();
+    // Deduplicate: count at most one view per IP per minute. This also serves
+    // as the rate limit, so refreshes and bots can't inflate the count or
+    // flood the events table.
+    if (!rateLimit("view", ip, 1, 60_000)) return;
     await prisma.$transaction([
       prisma.profile.update({ where: { id: profileId }, data: { views: { increment: 1 } } }),
       prisma.event.create({ data: { type: "view" } }),
