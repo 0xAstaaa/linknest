@@ -62,14 +62,10 @@ Quick version:
 
 1. Create a free database at [turso.tech](https://turso.tech) and copy its URL +
    auth token.
-2. Push migrations to it:
-   ```bash
-   DATABASE_URL="libsql://YOUR-DB.turso.io?authToken=YOUR_TOKEN" npx prisma migrate deploy
-   ```
-3. Import the repo in Vercel and set the env vars above
+2. Import the repo in Vercel and set the env vars above
    (`DATABASE_URL`, `DATABASE_AUTH_TOKEN`, `DASHBOARD_PASSWORD`, `SESSION_SECRET`).
-4. Deploy. The build runs `prisma migrate deploy && next build` automatically
-   (see `vercel-build` in `package.json`).
+3. Deploy. The build applies migrations to Turso automatically via
+   `prisma/deploy.mjs` (see `vercel-build` in `package.json`).
 
 ## License
 

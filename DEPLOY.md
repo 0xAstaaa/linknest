@@ -30,17 +30,18 @@ Everything the app reads is `process.env`-driven, so these are the only moving p
 
 ---
 
-## 2. Push the schema to Turso
+## 2. Schema setup (handled automatically on deploy)
 
-From the project folder, run migrations against the remote DB **once**. The Prisma
-CLI takes the token as a query param on the URL:
+You don't need to run migrations by hand. The Vercel build runs
+`node prisma/deploy.mjs`, which applies the migration SQL to your Turso database
+through the libSQL client and tracks what's already applied (so redeploys are safe).
 
-```bash
-DATABASE_URL="<DB_URL>?authToken=<DB_TOKEN>" npx prisma migrate deploy
-```
+> Why not `prisma migrate deploy`? Prisma 7's migrate engine doesn't understand
+> the `libsql://` scheme (error P1013), so we apply migrations via the libSQL
+> client instead — the same driver the app uses at runtime.
 
-Optionally seed a starter profile (otherwise the app creates a blank one on first
-visit):
+If you want to seed a starter profile (otherwise the app creates a blank one on
+first visit), run once from your machine:
 
 ```bash
 DATABASE_URL="<DB_URL>" DATABASE_AUTH_TOKEN="<DB_TOKEN>" npm run db:seed
@@ -67,7 +68,9 @@ git push -u origin main
 
 1. Go to **https://vercel.com/new** and import your `linknest` repo.
 2. Framework preset: **Next.js** (auto-detected). Leave build settings default —
-   the app defines `vercel-build` so Vercel runs `prisma migrate deploy && next build`.
+   the app defines `vercel-build`, so Vercel runs
+   `prisma generate && node prisma/deploy.mjs && next build` (generate client →
+   apply migrations to Turso → build).
 3. Add **Environment Variables** (Project → Settings → Environment Variables):
 
    | Name | Value |
