@@ -20,6 +20,7 @@ const MAP: Record<string, keyof typeof si> = {
   "fb.com": "siFacebook",
   "twitch.tv": "siTwitch",
   "discord.com": "siDiscord",
+  "discordapp.com": "siDiscord",
   "discord.gg": "siDiscord",
   "t.me": "siTelegram",
   "telegram.org": "siTelegram",
