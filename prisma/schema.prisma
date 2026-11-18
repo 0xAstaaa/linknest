@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Single-tenant: this table holds exactly one row — the site owner's profile.
+model Profile {
+  id        String   @id @default(cuid())
+  name      String   @default("Your Name")
+  bio       String   @default("")
+  avatar    String   @default("")
+  theme     String   @default("noir")
+  showIcons Boolean  @default(true)
+  links     Link[]
+  views     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  title     String
+  url       String
+  icon      String   @default("link")
+  active    Boolean  @default(true)
+  clicks    Int      @default(0)
+  position  Int      @default(0)
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String
+  createdAt DateTime @default(now())
+  events    Event[]
+}
+
+// One row per real view or click, for time-series analytics.
+// No personal data is stored — no IPs, no cookies, no user identifiers.
+model Event {
+  id        String   @id @default(cuid())
+  type      String   // "view" | "click"
+  linkId    String?  // set for clicks
+  link      Link?    @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([linkId])
+}

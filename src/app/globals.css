@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+body {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, "Times New Roman", serif;
+}
+
+/* themed text selection */
+::selection {
+  background: var(--accent, #e8e4d8);
+  color: var(--accent-fg, #0b0b0c);
+}
+
+/* ---- restrained, editorial motion ---- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise {
+  opacity: 0;
+  animation: rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* a line that draws itself in */
+@keyframes draw-line {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.draw-line {
+  transform-origin: left;
+  animation: draw-line 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ---- film grain, driven by --grain ---- */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: var(--grain, 0.05);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  mix-blend-mode: overlay;
+}
+
+/* ---- link row: label + arrow, fills with accent on hover ---- */
+.row-link {
+  position: relative;
+  isolation: isolate;
+}
+.row-link::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: -1;
+}
+.row-link:hover::before,
+.row-link:focus-visible::before {
+  transform: scaleX(1);
+}
+.row-link .row-arrow {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.row-link:hover .row-arrow,
+.row-link:focus-visible .row-arrow {
+  transform: translateX(6px);
+}
+
+.thin-scroll::-webkit-scrollbar { width: 6px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: var(--line); border-radius: 999px; }
+.thin-scroll::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .draw-line { animation: none !important; opacity: 1 !important; transform: none !important; }
+  .row-link::before, .row-arrow { transition: none !important; }
+}
